@@ -1,1 +1,3 @@
-"# wc-slider" 
+# <wc-slider>
+
+
