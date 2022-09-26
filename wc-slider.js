@@ -37,17 +37,18 @@ class WCSlider extends HTMLElement{
         color: white;
         margin: 5px 0 0 10px;
       }
-      .rangeHolder .legendHolder .legend-1 {
-        background: #afd6f3;
-      }
+      
+      ${this.colourRange.map((e, i) => (
+        `.rangeHolder .legendHolder .legend-${i + 1} {
+          background: ${e};
+        }`
+      )).join('')}
+      
       .rangeHolder .legendHolder .legend-1.deselected {
         background: #d0d5d5;
       }
       .rangeHolder .legendHolder .legend-1.deselected header {
         opacity: 0.3;
-      }
-      .rangeHolder .legendHolder .legend-2 {
-        background: #99caef;
       }
       .rangeHolder .legendHolder .legend-2.deselected {
         background: #c2c9c9;
@@ -55,17 +56,11 @@ class WCSlider extends HTMLElement{
       .rangeHolder .legendHolder .legend-2.deselected header {
         opacity: 0.3;
       }
-      .rangeHolder .legendHolder .legend-3 {
-        background: #83bfec;
-      }
       .rangeHolder .legendHolder .legend-3.deselected {
         background: #b5bcbd;
       }
       .rangeHolder .legendHolder .legend-3.deselected header {
         opacity: 0.3;
-      }
-      .rangeHolder .legendHolder .legend-4 {
-        background: #6db3e8;
       }
       .rangeHolder .legendHolder .legend-4.deselected {
         background: #a7b0b1;
@@ -73,26 +68,17 @@ class WCSlider extends HTMLElement{
       .rangeHolder .legendHolder .legend-4.deselected header {
         opacity: 0.3;
       }
-      .rangeHolder .legendHolder .legend-5 {
-        background: #57a8e5;
-      }
       .rangeHolder .legendHolder .legend-5.deselected {
         background: #9aa4a5;
       }
       .rangeHolder .legendHolder .legend-5.deselected header {
         opacity: 0.3;
       }
-      .rangeHolder .legendHolder .legend-6 {
-        background: #419ce1;
-      }
       .rangeHolder .legendHolder .legend-6.deselected {
         background: #8c9899;
       }
       .rangeHolder .legendHolder .legend-6.deselected header {
         opacity: 0.3;
-      }
-      .rangeHolder .legendHolder .legend-7 {
-        background: #2b91de;
       }
       .rangeHolder .legendHolder .legend-7.deselected {
         background: #7f8c8d;
@@ -226,10 +212,43 @@ class WCSlider extends HTMLElement{
   get to() {
     return this.getAttribute('to') || '#2b91de'
   }
-  get colourRange() {
-    this.range.map((element, index, array) => {
 
-    })
+  rgb(color) {
+    const hex = color.replace("#", "")
+    return {
+      r: parseInt(hex.substring(0, 2), 16),
+      g: parseInt(hex.substring(2, 4), 16),
+      b: parseInt(hex.substring(4, 6), 16),
+    }
+  }
+
+  gradient(color1, color2, ratio) {
+    const from = this.rgb(color1)
+    const to = this.rgb(color2)
+
+    const r = Math.ceil(from.r * ratio + to.r * (1 - ratio));
+    const g = Math.ceil(from.g * ratio + to.g * (1 - ratio));
+    const b = Math.ceil(from.b * ratio + to.b * (1 - ratio));
+
+    return "#" + this.hex(r) + this.hex(g) + this.hex(b);
+  }
+
+  hex(num) {
+    num = num.toString(16);
+    return (num.toString().length === 1) ? '0' + num : num;
+  }
+
+  get colourRange() {
+    return this.range.map((element, index, array) => {
+      if(index === 0){
+        return this.to
+      }
+      if(index === array.length - 1){
+        return this.from
+      }
+      console.log((index + 1) / array.length)
+      return this.gradient(this.from, this.to, (index + 1) / array.length)
+    }).reverse()
   }
   get range() {
     return Array.from({length: (this.max + 1) - this.min}, (_, i ) => i + this.min)
