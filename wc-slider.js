@@ -1,13 +1,27 @@
-class WCSlider extends HTMLElement{
+class WCSlider extends HTMLElement {
   static get observedAttributes() {
-    return ['width']
+    return [
+      'width',
+      'value',
+      'min',
+      'max',
+      'from',
+      'to',
+      'deselected-from',
+      'deselected-to',
+    ]
   }
 
   get css() {
     return `
       :host {
-        --width: ${this.width}px;
-        --height ${this.width / 7}px;
+        --width: ${(this.parentWidth / 100) * this.width}px;
+        --segment-width: ${
+          ((this.parentWidth / 100) * this.width) / this.range.length
+        }px; 
+        --height: ${
+          ((this.parentWidth / 100) * this.width) / this.range.length
+        }px;
       }
       .rangeHolder {
         position: relative;
@@ -18,7 +32,7 @@ class WCSlider extends HTMLElement{
       .rangeHolder .legendHolder {
         position: absolute;
         width: var(--width);
-        height: calc(var(--height) - 20px);
+        height: var(--height);
         top: 0;
         left: 0;
         display: flex;
@@ -27,136 +41,88 @@ class WCSlider extends HTMLElement{
         justify-content: flex-start;
       }
       .rangeHolder .legendHolder .legend {
-        width: 140px;
-        height: 100px;
+        width: var(--segment-width);
+        height: var(--height);
       }
       .rangeHolder .legendHolder .legend header {
         cursor: pointer;
-        font-size: 1.5em;
+        font-size: calc((var(--segment-width) / 5));
         font-weight: bold;
-        color: white;
-        margin: 5px 0 0 10px;
+        margin: calc(var(--segment-width) * 0.05) 0 0 calc(var(--segment-width) * 0.1);
+        user-select: none;
       }
       
-      ${this.colourRange.map((e, i) => (
-        `.rangeHolder .legendHolder .legend-${i + 1} {
-          background: ${e};
-        }`
-      )).join('')}
+      ${this.colourRange
+        .map(
+          (e, i) => `
+          .rangeHolder .legendHolder .legend-${this.range[i]} {
+            background: ${e};
+          }
+          .rangeHolder .legendHolder .legend-${this.range[i]} header {
+            color: ${this.invertColor(e, true)};
+          }
+        `
+        )
+        .join('')}
       
-      .rangeHolder .legendHolder .legend-1.deselected {
-        background: #d0d5d5;
-      }
-      .rangeHolder .legendHolder .legend-1.deselected header {
-        opacity: 0.3;
-      }
-      .rangeHolder .legendHolder .legend-2.deselected {
-        background: #c2c9c9;
-      }
-      .rangeHolder .legendHolder .legend-2.deselected header {
-        opacity: 0.3;
-      }
-      .rangeHolder .legendHolder .legend-3.deselected {
-        background: #b5bcbd;
-      }
-      .rangeHolder .legendHolder .legend-3.deselected header {
-        opacity: 0.3;
-      }
-      .rangeHolder .legendHolder .legend-4.deselected {
-        background: #a7b0b1;
-      }
-      .rangeHolder .legendHolder .legend-4.deselected header {
-        opacity: 0.3;
-      }
-      .rangeHolder .legendHolder .legend-5.deselected {
-        background: #9aa4a5;
-      }
-      .rangeHolder .legendHolder .legend-5.deselected header {
-        opacity: 0.3;
-      }
-      .rangeHolder .legendHolder .legend-6.deselected {
-        background: #8c9899;
-      }
-      .rangeHolder .legendHolder .legend-6.deselected header {
-        opacity: 0.3;
-      }
-      .rangeHolder .legendHolder .legend-7.deselected {
-        background: #7f8c8d;
-      }
-      .rangeHolder .legendHolder .legend-7.deselected header {
-        opacity: 0.3;
-      }
-      .rangeHolder[data-value="1"] .sliderHolder {
-        left: 140px;
-      }
-      .rangeHolder[data-value="1"] .sliderHolder .pseudoSlider {
-        background: linear-gradient(to right, #afd6f3, #afd6f3 70%, white 70%, white);
-      }
-      .rangeHolder[data-value="2"] .sliderHolder {
-        left: 280px;
-      }
-      .rangeHolder[data-value="2"] .sliderHolder .pseudoSlider {
-        background: linear-gradient(to right, #99caef, #99caef 70%, white 70%, white);
-      }
-      .rangeHolder[data-value="3"] .sliderHolder {
-        left: 420px;
-      }
-      .rangeHolder[data-value="3"] .sliderHolder .pseudoSlider {
-        background: linear-gradient(to right, #83bfec, #83bfec 70%, white 70%, white);
-      }
-      .rangeHolder[data-value="4"] .sliderHolder {
-        left: 560px;
-      }
-      .rangeHolder[data-value="4"] .sliderHolder .pseudoSlider {
-        background: linear-gradient(to right, #6db3e8, #6db3e8 70%, white 70%, white);
-      }
-      .rangeHolder[data-value="5"] .sliderHolder {
-        left: 700px;
-      }
-      .rangeHolder[data-value="5"] .sliderHolder .pseudoSlider {
-        background: linear-gradient(to right, #57a8e5, #57a8e5 70%, white 70%, white);
-      }
-      .rangeHolder[data-value="6"] .sliderHolder {
-        left: 840px;
-      }
-      .rangeHolder[data-value="6"] .sliderHolder .pseudoSlider {
-        background: linear-gradient(to right, #419ce1, #419ce1 70%, white 70%, white);
-      }
-      .rangeHolder[data-value="7"] .sliderHolder {
-        left: 980px;
-      }
-      .rangeHolder[data-value="7"] .sliderHolder .pseudoSlider {
-        background: linear-gradient(to right, #2b91de, #2b91de 70%, white 70%, white);
-      }
+      ${this.deselectedRange
+        .map(
+          (e, i) => `
+          .rangeHolder .legendHolder .legend-${this.range[i]}.deselected {
+            background: ${e};
+            color: ${this.invertColor(e, true)};
+          }
+          .rangeHolder .legendHolder .legend-${
+            this.range[i]
+          }.deselected header {
+            opacity: 0.5;
+          }
+        `
+        )
+        .join('')}
+      
+      ${this.range
+        .map(
+          (e, i, array) => `
+            .rangeHolder[data-value="${e}"] .sliderHolder {
+              left: calc((var(--width) / ${array.length}) * ${i + 1});
+            }
+            .rangeHolder[data-value="${e}"] .sliderHolder .pseudoSlider {
+              background: linear-gradient(to right, ${this.colourRange[i]}, ${
+            this.colourRange[i]
+          } 70%, white 70%, white);
+            }`
+        )
+        .join('')}
+
       .rangeHolder .sliderHolder {
         position: absolute;
         top: -10px;
       }
       .rangeHolder .sliderHolder .arrowPointerBack {
         position: absolute;
-        height: 20px;
-        width: 20px;
-        left: -10px;
-        top: 50px;
+        height: calc(var(--segment-width) * 0.2);
+        width: calc(var(--segment-width) * 0.2);
+        left: calc(var(--segment-width) * -0.1);
+        bottom: 0;
+        transform: rotate(45deg) translate(calc((var(--height) - 10px) / 2), calc((var(--height) - 10px) / 2));
         background: white;
-        transform: rotate(45deg);
         transform-origin: center center;
       }
       .rangeHolder .sliderHolder .pseudoSlider {
         position: absolute;
-        height: 120px;
-        width: 10px;
-        left: -5px;
+        height: calc(var(--height) + 20px);
+        width: calc(var(--segment-width) * 0.1);
+        left: calc(var(--segment-width) * -0.05);
       }
       .rangeHolder .sliderHolder .arrowPointerFront {
         cursor: pointer;
         position: absolute;
-        height: 40px;
-        width: 40px;
-        left: -20px;
-        top: 40px;
-        transform: rotate(45deg);
-        transform-origin: center center;
+        height: calc(var(--segment-width) * 0.4);
+        width: calc(var(--segment-width) * 0.4);
+        left: calc(var(--segment-width) * -0.2);
+        bottom: 0;
+        transform: rotate(45deg) translate(calc((var(--height) + 10px) / 2), calc((var(--height) + 10px) / 2));
       }
     `
   }
@@ -166,11 +132,15 @@ class WCSlider extends HTMLElement{
       <div class="rangeHolder"
            data-value="${this.value}">
         <div class="legendHolder">
-          ${this.range.map(e => (
-            `<div class="legend legend-${e} ">
-              <header>${e}</header>
-            </div>`  
-          )).join('')}
+          ${this.range
+            .map(
+              (e) => `
+                <div class="legend legend-${e} ">
+                  <header>${e}</header>
+                </div>
+              `
+            )
+            .join('')}
         </div>
         <div class="sliderHolder">
           <div class="arrowPointerBack"></div>
@@ -183,38 +153,62 @@ class WCSlider extends HTMLElement{
   constructor() {
     super()
     this.shadow = this.attachShadow({
-      mode: 'open',
+      mode: 'closed',
     })
-    console.log(this.colourRange)
   }
+
   render() {
     this.shadow.innerHTML = `<style>${this.css}</style>${this.html}`
+    this.shadow.querySelectorAll('header').forEach((header) => {
+      header.addEventListener('click', (e) => {
+        const target = Number(
+          [...e.target.parentNode.classList]
+            .find((c) => /legend-\d/.test(c))
+            .replace(/^\D+/g, '')
+        )
+        this.value = target
+      })
+    })
+    this.shadow.querySelectorAll('.legend').forEach((legend) => {
+      if (
+        Number(
+          [...legend.classList]
+            .find((c) => /legend-\d/.test(c))
+            .replace(/^\D+/g, '')
+        ) <= this.value
+      ) {
+        legend.classList.remove('deselected')
+      } else {
+        legend.classList.add('deselected')
+      }
+    })
+    this.shadow
+      .querySelector('.arrowPointerFront')
+      .addEventListener('click', (e) => {
+        if (e.offsetX < e.target.offsetWidth / 2) {
+          if (this.value !== this.min) {
+            this.value -= 1
+          }
+        } else {
+          if (this.value !== this.max) {
+            this.value += 1
+          }
+        }
+      })
   }
   connectedCallback() {
-    console.log('connected')
+    this.parentWidth = this.parentNode.offsetWidth
     this.render()
   }
-  get width() {
-    return Number(this.getAttribute('width')) || 980
-  }
-  get value() {
-    return Number(this.getAttribute('value'))
-  }
-  get min() {
-    return Number(this.getAttribute('min'))
-  }
-  get max() {
-    return Number(this.getAttribute('max'))
-  }
-  get from() {
-    return this.getAttribute('from') || '#afd6f3'
-  }
-  get to() {
-    return this.getAttribute('to') || '#2b91de'
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue !== newValue) {
+      this.render()
+    }
   }
 
   rgb(color) {
-    const hex = color.replace("#", "")
+    const hex = color.replace('#', '')
     return {
       r: parseInt(hex.substring(0, 2), 16),
       g: parseInt(hex.substring(2, 4), 16),
@@ -225,33 +219,119 @@ class WCSlider extends HTMLElement{
   gradient(color1, color2, ratio) {
     const from = this.rgb(color1)
     const to = this.rgb(color2)
+    const r = Math.ceil(from.r * ratio + to.r * (1 - ratio))
+    const g = Math.ceil(from.g * ratio + to.g * (1 - ratio))
+    const b = Math.ceil(from.b * ratio + to.b * (1 - ratio))
+    return '#' + this.hex(r) + this.hex(g) + this.hex(b)
+  }
 
-    const r = Math.ceil(from.r * ratio + to.r * (1 - ratio));
-    const g = Math.ceil(from.g * ratio + to.g * (1 - ratio));
-    const b = Math.ceil(from.b * ratio + to.b * (1 - ratio));
+  invertColor(hex, bw) {
+    if (hex.indexOf('#') === 0) {
+      hex = hex.slice(1)
+    }
+    // convert 3-digit hex to 6-digits.
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
+    }
+    if (hex.length !== 6) {
+      throw new Error('Invalid HEX color.')
+    }
+    let r = parseInt(hex.slice(0, 2), 16),
+      g = parseInt(hex.slice(2, 4), 16),
+      b = parseInt(hex.slice(4, 6), 16)
+    if (bw) {
+      // https://stackoverflow.com/a/3943023/112731
+      return r * 0.299 + g * 0.587 + b * 0.114 > 186 ? '#000000' : '#FFFFFF'
+    }
+    // invert color components
+    r = (255 - r).toString(16)
+    g = (255 - g).toString(16)
+    b = (255 - b).toString(16)
+    // pad each with zeros and return
+    return '#' + this.padZero(r) + this.padZero(g) + this.padZero(b)
+  }
 
-    return "#" + this.hex(r) + this.hex(g) + this.hex(b);
+  padZero(str, len) {
+    len = len || 2
+    const zeros = new Array(len).join('0')
+    return (zeros + str).slice(-len)
   }
 
   hex(num) {
-    num = num.toString(16);
-    return (num.toString().length === 1) ? '0' + num : num;
+    num = num.toString(16)
+    return num.toString().length === 1 ? '0' + num : num
   }
 
   get colourRange() {
-    return this.range.map((element, index, array) => {
-      if(index === 0){
-        return this.to
-      }
-      if(index === array.length - 1){
-        return this.from
-      }
-      console.log((index + 1) / array.length)
-      return this.gradient(this.from, this.to, (index + 1) / array.length)
-    }).reverse()
+    return this.range
+      .map((element, index, array) => {
+        if (index === 0) {
+          return this.to
+        }
+        if (index === array.length - 1) {
+          return this.from
+        }
+        return this.gradient(
+          this.deselectedFrom,
+          this.to,
+          (index + 1) / array.length
+        )
+      })
+      .reverse()
   }
+
+  get deselectedRange() {
+    return this.range
+      .map((element, index, array) => {
+        if (index === 0) {
+          return this.deselectedTo
+        }
+        if (index === array.length - 1) {
+          return this.deselectedFrom
+        }
+        return this.gradient(
+          this.deselectedFrom,
+          this.deselectedTo,
+          (index + 1) / array.length
+        )
+      })
+      .reverse()
+  }
+
   get range() {
-    return Array.from({length: (this.max + 1) - this.min}, (_, i ) => i + this.min)
+    return Array.from(
+      { length: this.max + 1 - this.min },
+      (_, i) => i + this.min
+    )
+  }
+  get width() {
+    return Number(this.getAttribute('width')) || 100
+  }
+  get value() {
+    return Number(this.getAttribute('value')) || 4
+  }
+  set value(value) {
+    if (value !== this.value) {
+      this.setAttribute('value', value)
+    }
+  }
+  get min() {
+    return this.getAttribute('min') ? Number(this.getAttribute('min')) : 1
+  }
+  get max() {
+    return this.getAttribute('max') ? Number(this.getAttribute('max')) : 7
+  }
+  get from() {
+    return this.getAttribute('from') || '#afd6f3'
+  }
+  get to() {
+    return this.getAttribute('to') || '#2b91de'
+  }
+  get deselectedFrom() {
+    return this.getAttribute('deselected-from') || '#d0d5d5'
+  }
+  get deselectedTo() {
+    return this.getAttribute('deselected-to') || '#7f8c8d'
   }
 }
 
