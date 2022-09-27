@@ -11,7 +11,6 @@ class WCSlider extends HTMLElement {
       'deselected-to',
     ]
   }
-
   get css() {
     return `
       :host {
@@ -126,7 +125,6 @@ class WCSlider extends HTMLElement {
       }
     `
   }
-
   get html() {
     return `
       <div class="rangeHolder"
@@ -156,7 +154,6 @@ class WCSlider extends HTMLElement {
       mode: 'closed',
     })
   }
-
   render() {
     this.shadow.innerHTML = `<style>${this.css}</style>${this.html}`
     this.shadow.querySelectorAll('header').forEach((header) => {
@@ -200,13 +197,11 @@ class WCSlider extends HTMLElement {
     this.parentWidth = this.parentNode.offsetWidth
     this.render()
   }
-
   attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue !== newValue) {
       this.render()
     }
   }
-
   rgb(color) {
     const hex = color.replace('#', '')
     return {
@@ -215,7 +210,6 @@ class WCSlider extends HTMLElement {
       b: parseInt(hex.substring(4, 6), 16),
     }
   }
-
   gradient(color1, color2, ratio) {
     const from = this.rgb(color1)
     const to = this.rgb(color2)
@@ -224,7 +218,6 @@ class WCSlider extends HTMLElement {
     const b = Math.ceil(from.b * ratio + to.b * (1 - ratio))
     return '#' + this.hex(r) + this.hex(g) + this.hex(b)
   }
-
   invertColor(hex, bw) {
     if (hex.indexOf('#') === 0) {
       hex = hex.slice(1)
@@ -250,18 +243,15 @@ class WCSlider extends HTMLElement {
     // pad each with zeros and return
     return '#' + this.padZero(r) + this.padZero(g) + this.padZero(b)
   }
-
   padZero(str, len) {
     len = len || 2
     const zeros = new Array(len).join('0')
     return (zeros + str).slice(-len)
   }
-
   hex(num) {
     num = num.toString(16)
     return num.toString().length === 1 ? '0' + num : num
   }
-
   get colourRange() {
     return this.range
       .map((element, index, array) => {
@@ -279,7 +269,6 @@ class WCSlider extends HTMLElement {
       })
       .reverse()
   }
-
   get deselectedRange() {
     return this.range
       .map((element, index, array) => {
@@ -297,7 +286,6 @@ class WCSlider extends HTMLElement {
       })
       .reverse()
   }
-
   get range() {
     return Array.from(
       { length: this.max + 1 - this.min },
@@ -334,5 +322,4 @@ class WCSlider extends HTMLElement {
     return this.getAttribute('deselected-to') || '#7f8c8d'
   }
 }
-
 window.customElements.define('wc-slider', WCSlider)
