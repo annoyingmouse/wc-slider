@@ -261,11 +261,7 @@ class WCSlider extends HTMLElement {
         if (index === array.length - 1) {
           return this.from
         }
-        return this.gradient(
-          this.deselectedFrom,
-          this.to,
-          (index + 1) / array.length
-        )
+        return this.gradient(this.from, this.to, (index + 1) / array.length)
       })
       .reverse()
   }
