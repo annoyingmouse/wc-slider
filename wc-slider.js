@@ -124,8 +124,8 @@ class WCSlider extends HTMLElement {
         cursor: pointer;
         position: absolute;
         height: var(--height);
-        width: calc(var(--segment-width) * 0.4);
-        left: calc(var(--segment-width) * -0.2);
+        width: calc(var(--segment-width) * 0.6);
+        left: calc(var(--segment-width) * -0.3);
         top: 10px;
       }
     `
@@ -264,7 +264,7 @@ class WCSlider extends HTMLElement {
     const img = document.createElement('img')
     img.src =
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAA1BMVEVHcEyC+tLSAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII='
-    document.body.appendChild(img)
+    this.shadow.appendChild(img)
     e.dataTransfer.setDragImage(img, 0, 0)
     e.dataTransfer.dropEffect = 'none'
     e.dataTransfer.effectAllowed = 'all'
@@ -381,7 +381,7 @@ class WCSlider extends HTMLElement {
     return Number(this.getAttribute('width')) || 100
   }
   get value() {
-    return Number(this.getAttribute('value')) || 4
+    return this.getAttribute('value') ? Number(this.getAttribute('value')) : 4
   }
   set value(value) {
     if (value !== this.value) {
