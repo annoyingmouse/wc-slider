@@ -242,8 +242,8 @@ class WCSlider extends HTMLElement {
   }
 
   handleDrag(e) {
-    let newLeft =
-      e.clientX - this.shiftX - this.legendHolder.getBoundingClientRect().left
+    const rect = this.getBoundingClientRect()
+    let newLeft = e.pageX - rect.left
     if (newLeft < 10) {
       newLeft = 10
     }
