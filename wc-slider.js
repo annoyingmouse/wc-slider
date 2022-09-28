@@ -1,4 +1,7 @@
 class WCSlider extends HTMLElement {
+  #range
+  #colourRange
+  #deselectedRange
   static get observedAttributes() {
     return [
       'width',
@@ -16,10 +19,10 @@ class WCSlider extends HTMLElement {
       :host {
         --width: ${(this.parentWidth / 100) * this.width}px;
         --segment-width: ${
-          ((this.parentWidth / 100) * this.width) / this.range.length
+          ((this.parentWidth / 100) * this.width) / this.#range.length
         }px; 
         --height: ${
-          ((this.parentWidth / 100) * this.width) / this.range.length
+          ((this.parentWidth / 100) * this.width) / this.#range.length
         }px;
       }
       .rangeHolder {
@@ -27,23 +30,24 @@ class WCSlider extends HTMLElement {
         width: var(--width);
         height: var(--height);
         font-family: Arial, Helvetica, sans-serif;
+        padding: 10px;
       }
-      .rangeHolder .legendHolder {
+      .legendHolder {
         position: absolute;
         width: var(--width);
-        height: var(--height);
-        top: 0;
-        left: 0;
+        height: calc(var(--height));
+        top: 10px;
+        left: 10px;
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
         justify-content: flex-start;
       }
-      .rangeHolder .legendHolder .legend {
+      .legend {
         width: var(--segment-width);
         height: var(--height);
       }
-      .rangeHolder .legendHolder .legend header {
+      header {
         cursor: pointer;
         font-size: calc((var(--segment-width) / 5));
         font-weight: bold;
@@ -51,77 +55,78 @@ class WCSlider extends HTMLElement {
         user-select: none;
       }
       
-      ${this.colourRange
+      ${this.#colourRange
         .map(
           (e, i) => `
-          .rangeHolder .legendHolder .legend-${this.range[i]} {
+          .legend-${this.#range[i]} {
             background: ${e};
           }
-          .rangeHolder .legendHolder .legend-${this.range[i]} header {
+          .legend-${this.#range[i]} header {
             color: ${this.invertColor(e, true)};
           }
         `
         )
         .join('')}
       
-      ${this.deselectedRange
+      ${this.#deselectedRange
         .map(
           (e, i) => `
-          .rangeHolder .legendHolder .legend-${this.range[i]}.deselected {
+          .legend-${this.#range[i]}.deselected {
             background: ${e};
             color: ${this.invertColor(e, true)};
           }
-          .rangeHolder .legendHolder .legend-${
-            this.range[i]
-          }.deselected header {
+          .legend-${this.#range[i]}.deselected header {
             opacity: 0.5;
           }
         `
         )
         .join('')}
       
-      ${this.range
+      ${this.#range
         .map(
           (e, i, array) => `
             .rangeHolder[data-value="${e}"] .sliderHolder {
-              left: calc((var(--width) / ${array.length}) * ${i + 1});
+              left: calc((var(--segment-width) * ${i + 1}) + 10px);
             }
             .rangeHolder[data-value="${e}"] .sliderHolder .pseudoSlider {
-              background: linear-gradient(to right, ${this.colourRange[i]}, ${
-            this.colourRange[i]
+              background: linear-gradient(to right, ${this.#colourRange[i]}, ${
+            this.#colourRange[i]
           } 70%, white 70%, white);
             }`
         )
         .join('')}
 
-      .rangeHolder .sliderHolder {
+      .sliderHolder {
         position: absolute;
-        top: -10px;
+        top: 0;
+        cursor: grab;
       }
-      .rangeHolder .sliderHolder .arrowPointerBack {
+      .sliderHolder.grabbed {
+        cursor: grabbing;
+      }
+      .arrowPointerBack {
         position: absolute;
         height: calc(var(--segment-width) * 0.2);
         width: calc(var(--segment-width) * 0.2);
         left: calc(var(--segment-width) * -0.1);
         bottom: 0;
-        transform: rotate(45deg) translate(calc((var(--height) - 10px) / 2), calc((var(--height) - 10px) / 2));
+        transform: rotate(45deg) translate(calc(var(--height) / 2), calc(var(--height) / 2));
         background: white;
         transform-origin: center center;
       }
-      .rangeHolder .sliderHolder .pseudoSlider {
+      .pseudoSlider {
         position: absolute;
         height: calc(var(--height) + 20px);
         width: calc(var(--segment-width) * 0.1);
         left: calc(var(--segment-width) * -0.05);
       }
-      .rangeHolder .sliderHolder .arrowPointerFront {
+      .arrowPointerFront {
         cursor: pointer;
         position: absolute;
-        height: calc(var(--segment-width) * 0.4);
+        height: var(--height);
         width: calc(var(--segment-width) * 0.4);
         left: calc(var(--segment-width) * -0.2);
-        bottom: 0;
-        transform: rotate(45deg) translate(calc((var(--height) + 10px) / 2), calc((var(--height) + 10px) / 2));
+        top: 10px;
       }
     `
   }
@@ -130,7 +135,7 @@ class WCSlider extends HTMLElement {
       <div class="rangeHolder"
            data-value="${this.value}">
         <div class="legendHolder">
-          ${this.range
+          ${this.#range
             .map(
               (e) => `
                 <div class="legend legend-${e} ">
@@ -140,7 +145,7 @@ class WCSlider extends HTMLElement {
             )
             .join('')}
         </div>
-        <div class="sliderHolder">
+        <div class="sliderHolder" draggable="true">
           <div class="arrowPointerBack"></div>
           <div class="arrowPointerFront"></div>
           <div class="pseudoSlider"></div>
@@ -155,6 +160,9 @@ class WCSlider extends HTMLElement {
     })
   }
   render() {
+    this.#range = this.range
+    this.#colourRange = this.colourRange
+    this.#deselectedRange = this.deselectedRange
     this.shadow.innerHTML = `<style>${this.css}</style>${this.html}`
     this.shadow.querySelectorAll('header').forEach((header) => {
       header.addEventListener('click', (e) => {
@@ -166,7 +174,9 @@ class WCSlider extends HTMLElement {
         this.value = target
       })
     })
-    this.shadow.querySelectorAll('.legend').forEach((legend) => {
+    this.legendHolder = this.shadow.querySelector('.legendHolder')
+    this.legends = this.legendHolder.querySelectorAll('.legend')
+    this.legends.forEach((legend) => {
       if (
         Number(
           [...legend.classList]
@@ -179,22 +189,106 @@ class WCSlider extends HTMLElement {
         legend.classList.add('deselected')
       }
     })
-    this.shadow
+    this.sliderHolder = this.shadow.querySelector('.sliderHolder')
+    this.sliderHolder
       .querySelector('.arrowPointerFront')
       .addEventListener('click', (e) => {
-        if (e.offsetX < e.target.offsetWidth / 2) {
-          if (this.value !== this.min) {
-            this.value -= 1
-          }
-        } else {
-          if (this.value !== this.max) {
-            this.value += 1
+        if (!this.sliderHolder.classList.contains('grabbing')) {
+          if (e.offsetX < e.target.offsetWidth / 2) {
+            if (this.value !== this.min) {
+              this.value -= 1
+            }
+          } else {
+            if (this.value !== this.max) {
+              this.value += 1
+            }
           }
         }
       })
+    this.sliderHolder = this.shadow.querySelector('.sliderHolder')
+    this.sliderHolder.addEventListener(
+      'dragstart',
+      this.handleDragStart.bind(this)
+    )
+    this.sliderHolder.addEventListener('dragend', this.handleDragEnd.bind(this))
+    this.sliderHolder.addEventListener(
+      'drag',
+      this.handleDrag.bind(this),
+      false
+    )
+    this.sliderHolder.addEventListener(
+      'dragover',
+      this.handleDragOver.bind(this)
+    )
+    this.shadow.querySelector('.rangeHolder').addEventListener('drop', (e) => {
+      e.preventDefault()
+      const rect = this.getBoundingClientRect()
+      const offsetX = e.pageX - rect.left
+      this.legends.forEach((legend) => {
+        const legendRect = legend.getBoundingClientRect()
+        if (
+          offsetX >= legendRect.x - rect.left &&
+          offsetX <= legendRect.x - rect.left + legendRect.width
+        ) {
+          const draggedValue = Number(
+            [...legend.classList]
+              .find((c) => /legend-\d/.test(c))
+              .replace(/^\D+/g, '')
+          )
+          this.value = draggedValue
+        }
+      })
+    })
   }
+
+  handleDrag(e) {
+    let newLeft =
+      e.clientX - this.shiftX - this.legendHolder.getBoundingClientRect().left
+    if (newLeft < 10) {
+      newLeft = 10
+    }
+    let rightEdge =
+      this.legendHolder.offsetWidth - this.sliderHolder.offsetWidth + 10
+    if (newLeft > rightEdge) {
+      newLeft = rightEdge
+    }
+    this.sliderHolder.style.left = newLeft + 'px'
+  }
+
+  handleDragOver(e) {
+    e.preventDefault()
+  }
+
+  handleDragStart(e) {
+    this.sliderHolder.classList.add('grabbing')
+    const img = document.createElement('img')
+    img.src =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAA1BMVEVHcEyC+tLSAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII='
+    document.body.appendChild(img)
+    e.dataTransfer.setDragImage(img, 0, 0)
+    e.dataTransfer.dropEffect = 'none'
+    e.dataTransfer.effectAllowed = 'all'
+    this.shiftX = e.clientX - this.sliderHolder.getBoundingClientRect().left
+  }
+
+  handleDragEnd(e) {
+    this.sliderHolder.classList.remove('grabbing')
+  }
+
+  handleDrop(e) {
+    e.preventDefault()
+    const targetValue = Number(
+      [...e.target.classList]
+        .find((c) => /legend-\d/.test(c))
+        .replace(/^\D+/g, '')
+    )
+    if (targetValue !== this.value) {
+      this.value = targetValue
+    }
+  }
+
   connectedCallback() {
-    this.parentWidth = this.parentNode.offsetWidth
+    this.parentWidth = this.parentNode.offsetWidth - 20
     this.render()
   }
   attributeChangedCallback(name, oldValue, newValue) {
@@ -241,19 +335,14 @@ class WCSlider extends HTMLElement {
     g = (255 - g).toString(16)
     b = (255 - b).toString(16)
     // pad each with zeros and return
-    return '#' + this.padZero(r) + this.padZero(g) + this.padZero(b)
-  }
-  padZero(str, len) {
-    len = len || 2
-    const zeros = new Array(len).join('0')
-    return (zeros + str).slice(-len)
+    return `#${r.padStart(2, '0')}${g.padStart(2, '0')}${b.padStart(2, '0')}`
   }
   hex(num) {
     num = num.toString(16)
     return num.toString().length === 1 ? '0' + num : num
   }
   get colourRange() {
-    return this.range
+    return this.#range
       .map((element, index, array) => {
         if (index === 0) {
           return this.to
@@ -266,7 +355,7 @@ class WCSlider extends HTMLElement {
       .reverse()
   }
   get deselectedRange() {
-    return this.range
+    return this.#range
       .map((element, index, array) => {
         if (index === 0) {
           return this.deselectedTo
