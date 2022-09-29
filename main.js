@@ -55,5 +55,5 @@
     deselectedFromToTest.setAttribute('value', '1')
     document.getElementById('deselected-from').innerText = deselectedFrom
     document.getElementById('deselected-to').innerText = deselectedTo
-  }, 1000)
+  }, 10000)
 })()

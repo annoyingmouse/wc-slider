@@ -97,7 +97,9 @@ class WCSlider extends HTMLElement {
         .map(
           (e, i, array) => `
             .rangeHolder[data-value="${e}"] .sliderHolder {
-              left: calc((var(--segment-width) * ${i + 1}) + 10px);
+              left: calc(((var(--segment-width) * ${
+                i + 1
+              }) + 10px) + var(--segment-width) * -0.05);
             }
             .rangeHolder[data-value="${e}"] .sliderHolder .pseudoSlider {
               background: linear-gradient(to right, ${this.#colourRange[i]}, ${
@@ -111,14 +113,17 @@ class WCSlider extends HTMLElement {
         position: absolute;
         top: 0;
         cursor: grab;
+        height: calc(var(--height) + 20px);
+        width: calc(var(--segment-width) * 0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
       }
       .arrowPointerBack {
-        position: absolute;
         height: calc(var(--segment-width) * 0.2);
         width: calc(var(--segment-width) * 0.2);
-        left: calc(var(--segment-width) * -0.1);
-        bottom: 0;
-        transform: rotate(45deg) translate(calc(var(--height) * .6), calc(var(--height) * .6));
+        transform: rotate(45deg);
         background: white;
         transform-origin: center center;
       }
@@ -127,13 +132,14 @@ class WCSlider extends HTMLElement {
         height: calc(var(--height) + 20px);
         width: calc(var(--segment-width) * 0.1);
         left: calc(var(--segment-width) * -0.05);
+        left: 0;
       }
       .arrowPointerFront {
         cursor: pointer;
         position: absolute;
         height: var(--height);
         width: calc(var(--segment-width) * 0.6);
-        left: calc(var(--segment-width) * -0.3);
+        left: calc((var(--segment-width) * -0.3) + (var(--segment-width) * 0.1) / 2);
         top: 10px;
       }
     `
