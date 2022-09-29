@@ -30,6 +30,7 @@ class WCSlider extends HTMLElement {
       .rangeHolder {
         position: relative;
         width: var(--width);
+        overflow: hidden;
         height: var(--height);
         font-family: Arial, Helvetica, sans-serif;
         padding: 10px;
@@ -117,7 +118,7 @@ class WCSlider extends HTMLElement {
         width: calc(var(--segment-width) * 0.2);
         left: calc(var(--segment-width) * -0.1);
         bottom: 0;
-        transform: rotate(45deg) translate(calc(var(--height) / 2), calc(var(--height) / 2));
+        transform: rotate(45deg) translate(calc(var(--height) * .6), calc(var(--height) * .6));
         background: white;
         transform-origin: center center;
       }
@@ -292,7 +293,7 @@ class WCSlider extends HTMLElement {
   }
 
   connectedCallback() {
-    this.parentWidth = this.parentNode.offsetWidth - 20
+    this.parentWidth = this.parentNode.getBoundingClientRect().width - 40
     this.render()
   }
   attributeChangedCallback(name, oldValue, newValue) {

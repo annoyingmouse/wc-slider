@@ -2,18 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>wc-slider (https://jsfiddle.net/annoyingmouse/gy9ctzfm/10/)</title>
-  <script type="module" src="dist/wc-slider.min.js"></script>
+  <title>&lt;wc-slider&gt;</title>
   <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" type="text/css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     body{
-      max-width: 900px;
-      padding: 0;
-      background-color: bisque;
+      font-family: 'Figtree', sans-serif;
     }
   </style>
 </head>
 <body>
-  <wc-slider min="1" max="15"></wc-slider>
+  <h1>&lt;wc-slider&gt;</h1>
+  <p>Adapted from the original <a href="https://jsfiddle.net/annoyingmouse/gy9ctzfm/10/">JSFiddle</a>.</p>
+  <h2>Installation</h2>
+  <pre style='color:#000000;background:#ffffff;'><span style='color:#a65700; '>&lt;</span><span style='color:#800000; font-weight:bold; '>script</span><span style='color:#274796; '> </span><span style='color:#074726; '>type</span><span style='color:#808030; '>=</span><span style='color:#0000e6; '>"module"</span><span style='color:#274796; '> </span><span style='color:#074726; '>src</span><span style='color:#808030; '>=</span><span style='color:#0000e6; '>"https://unpkg.com/wc-slider/wc-slider.js"</span><span style='color:#a65700; '>></span><span style='color:#a65700; '>&lt;/</span><span style='color:#800000; font-weight:bold; '>script</span><span style='color:#a65700; '>></span>
+</pre>
+  <h2>Examples</h2>
+  <h3>Basic Example (my original colours)</h3>
+  <wc-slider></wc-slider>
+  <h3>Changing <code>width</code> attribute randomly (<span id="width">100</span>%) every ten seconds between 50% and 100%</h3>
+  <wc-slider id="widthTest"></wc-slider>
+  <h3>Changing <code>min</code> and <code>max</code> attributes randomly (<span id="min">1</span>, <span id="max">7</span>) every ten seconds</h3>
+  <wc-slider id="minMaxTest"></wc-slider>
+  <h3>Changing <code>from</code> and <code>to</code> attributes randomly (<span id="from">#afd6f3</span>, <span id="to">#2b91de</span>) every ten seconds</h3>
+  <wc-slider id="fromToTest"></wc-slider>
+  <h3>Changing <code>deselected-from</code> and <code>deselected-to</code> attributes randomly (<span id="deselected-from">#d0d5d5</span>, <span id="deselected-to">#7f8c8d</span>) every ten seconds</h3>
+  <wc-slider id="deselectedFromToTest"></wc-slider>
+  <script src="main.js"></script>
+  <script type="module" src="dist/wc-slider.min.js"></script>
 </body>
 </html>
