@@ -1,0 +1,33 @@
+{
+  "name": "wc-slider",
+  "version": "1.0.9",
+  "description": "This web component creates a highly configurable slider element.",
+  "main": "wc-slider.js",
+  "scripts": {
+    "test": "echo \"No test specified\"",
+    "build": "rollup -c"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/annoyingmouse/wc-slider.git"
+  },
+  "keywords": [
+    "slider",
+    "range",
+    "web-component"
+  ],
+  "author": "Dominic Myers",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/annoyingmouse/wc-slider/issues"
+  },
+  "homepage": "https://github.com/annoyingmouse/wc-slider#readme",
+  "prettier": {
+    "singleQuote": true,
+    "semi": false
+  },
+  "devDependencies": {
+    "rollup": "^2.36.2",
+    "rollup-plugin-terser": "^7.0.2"
+  }
+}

@@ -2,6 +2,7 @@ class WCSlider extends HTMLElement {
   #range
   #colourRange
   #deselectedRange
+
   static get observedAttributes() {
     return [
       'width',
@@ -14,6 +15,7 @@ class WCSlider extends HTMLElement {
       'deselected-to',
     ]
   }
+
   get css() {
     return `
       :host {
@@ -48,7 +50,6 @@ class WCSlider extends HTMLElement {
         height: var(--height);
       }
       header {
-        cursor: pointer;
         font-size: calc((var(--segment-width) / 5));
         font-weight: bold;
         margin: calc(var(--segment-width) * 0.05) 0 0 calc(var(--segment-width) * 0.1);
@@ -64,6 +65,15 @@ class WCSlider extends HTMLElement {
           .legend-${this.#range[i]} header {
             color: ${this.invertColor(e, true)};
           }
+          
+          .legend-${this.#range[i]} header {
+            cursor: ${
+              this.#range[i] < this.constrainMin ||
+              this.#range[i] > this.constrainMax
+                ? 'not-allowed'
+                : 'pointer'
+            };
+          }          
         `
         )
         .join('')}
@@ -101,9 +111,6 @@ class WCSlider extends HTMLElement {
         top: 0;
         cursor: grab;
       }
-      .sliderHolder.grabbed {
-        cursor: grabbing;
-      }
       .arrowPointerBack {
         position: absolute;
         height: calc(var(--segment-width) * 0.2);
@@ -130,6 +137,7 @@ class WCSlider extends HTMLElement {
       }
     `
   }
+
   get html() {
     return `
       <div class="rangeHolder"
@@ -153,17 +161,92 @@ class WCSlider extends HTMLElement {
       </div>
     `
   }
+
   constructor() {
     super()
     this.shadow = this.attachShadow({
       mode: 'closed',
     })
   }
+
   render() {
     this.#range = this.range
     this.#colourRange = this.colourRange
     this.#deselectedRange = this.deselectedRange
     this.shadow.innerHTML = `<style>${this.css}</style>${this.html}`
+    this.legendHolder = this.shadow.querySelector('.legendHolder')
+    this.legends = this.legendHolder.querySelectorAll('.legend')
+    this.sliderHolder = this.shadow.querySelector('.sliderHolder')
+    this.rangeHolder = this.shadow.querySelector('.rangeHolder')
+    this.handleClicks()
+    this.handleLegendsClass()
+    this.handleArrowClick()
+    this.handleSlider()
+  }
+
+  handleSlider() {
+    this.sliderHolder.addEventListener('dragstart', (e) => {
+      const img = document.createElement('img')
+      img.src =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAA1BMVEVHcEyC+tLSAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII='
+      this.shadow.appendChild(img)
+      e.dataTransfer.setDragImage(img, 0, 0)
+      e.dataTransfer.dropEffect = 'none'
+      e.dataTransfer.effectAllowed = 'all'
+      this.shiftX = e.clientX - this.sliderHolder.getBoundingClientRect().left
+    })
+    this.sliderHolder.addEventListener(
+      'drag',
+      (e) => {
+        const rect = this.getBoundingClientRect()
+        let newLeft = e.pageX - rect.left
+        if (newLeft < 10) {
+          newLeft = 10
+        }
+        let rightEdge =
+          this.legendHolder.offsetWidth - this.sliderHolder.offsetWidth + 10
+        if (newLeft > rightEdge) {
+          newLeft = rightEdge
+        }
+        this.sliderHolder.style.left = newLeft + 'px'
+      },
+      false
+    )
+    this.sliderHolder.addEventListener('dragover', (e) => {
+      e.preventDefault()
+    })
+    this.sliderHolder.addEventListener('dragend', (e) => {
+      e.preventDefault()
+      const rect = this.getBoundingClientRect()
+      const offsetX = e.pageX - rect.left
+      if (offsetX < 10) {
+        this.value = this.#range[0]
+        return
+      }
+      if (offsetX > rect.width) {
+        this.value = this.#range[this.#range.length - 1]
+        return
+      } else {
+        this.legends.forEach((legend) => {
+          const legendRect = legend.getBoundingClientRect()
+
+          if (
+            offsetX >= legendRect.x - rect.left &&
+            offsetX <= legendRect.x - rect.left + legendRect.width
+          ) {
+            const draggedValue = Number(
+              [...legend.classList]
+                .find((c) => /legend-\d/.test(c))
+                .replace(/^\D+/g, '')
+            )
+            this.value = draggedValue
+          }
+        })
+      }
+    })
+  }
+
+  handleClicks() {
     this.shadow.querySelectorAll('header').forEach((header) => {
       header.addEventListener('click', (e) => {
         const target = Number(
@@ -174,8 +257,9 @@ class WCSlider extends HTMLElement {
         this.value = target
       })
     })
-    this.legendHolder = this.shadow.querySelector('.legendHolder')
-    this.legends = this.legendHolder.querySelectorAll('.legend')
+  }
+
+  handleLegendsClass() {
     this.legends.forEach((legend) => {
       if (
         Number(
@@ -189,102 +273,22 @@ class WCSlider extends HTMLElement {
         legend.classList.add('deselected')
       }
     })
-    this.sliderHolder = this.shadow.querySelector('.sliderHolder')
+  }
+
+  handleArrowClick() {
     this.sliderHolder
       .querySelector('.arrowPointerFront')
       .addEventListener('click', (e) => {
-        if (!this.sliderHolder.classList.contains('grabbing')) {
-          if (e.offsetX < e.target.offsetWidth / 2) {
-            if (this.value !== this.min) {
-              this.value -= 1
-            }
-          } else {
-            if (this.value !== this.max) {
-              this.value += 1
-            }
+        if (e.offsetX < e.target.offsetWidth / 2) {
+          if (this.value !== this.min) {
+            this.value -= 1
+          }
+        } else {
+          if (this.value !== this.max) {
+            this.value += 1
           }
         }
       })
-    this.sliderHolder = this.shadow.querySelector('.sliderHolder')
-    this.sliderHolder.addEventListener(
-      'dragstart',
-      this.handleDragStart.bind(this)
-    )
-    this.sliderHolder.addEventListener('dragend', this.handleDragEnd.bind(this))
-    this.sliderHolder.addEventListener(
-      'drag',
-      this.handleDrag.bind(this),
-      false
-    )
-    this.sliderHolder.addEventListener(
-      'dragover',
-      this.handleDragOver.bind(this)
-    )
-    this.shadow.querySelector('.rangeHolder').addEventListener('drop', (e) => {
-      e.preventDefault()
-      const rect = this.getBoundingClientRect()
-      const offsetX = e.pageX - rect.left
-      this.legends.forEach((legend) => {
-        const legendRect = legend.getBoundingClientRect()
-        if (
-          offsetX >= legendRect.x - rect.left &&
-          offsetX <= legendRect.x - rect.left + legendRect.width
-        ) {
-          const draggedValue = Number(
-            [...legend.classList]
-              .find((c) => /legend-\d/.test(c))
-              .replace(/^\D+/g, '')
-          )
-          this.value = draggedValue
-        }
-      })
-    })
-  }
-
-  handleDrag(e) {
-    const rect = this.getBoundingClientRect()
-    let newLeft = e.pageX - rect.left
-    if (newLeft < 10) {
-      newLeft = 10
-    }
-    let rightEdge =
-      this.legendHolder.offsetWidth - this.sliderHolder.offsetWidth + 10
-    if (newLeft > rightEdge) {
-      newLeft = rightEdge
-    }
-    this.sliderHolder.style.left = newLeft + 'px'
-  }
-
-  handleDragOver(e) {
-    e.preventDefault()
-  }
-
-  handleDragStart(e) {
-    this.sliderHolder.classList.add('grabbing')
-    const img = document.createElement('img')
-    img.src =
-      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAA1BMVEVHcEyC+tLSAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII='
-    this.shadow.appendChild(img)
-    e.dataTransfer.setDragImage(img, 0, 0)
-    e.dataTransfer.dropEffect = 'none'
-    e.dataTransfer.effectAllowed = 'all'
-    this.shiftX = e.clientX - this.sliderHolder.getBoundingClientRect().left
-  }
-
-  handleDragEnd(e) {
-    this.sliderHolder.classList.remove('grabbing')
-  }
-
-  handleDrop(e) {
-    e.preventDefault()
-    const targetValue = Number(
-      [...e.target.classList]
-        .find((c) => /legend-\d/.test(c))
-        .replace(/^\D+/g, '')
-    )
-    if (targetValue !== this.value) {
-      this.value = targetValue
-    }
   }
 
   connectedCallback() {
@@ -292,10 +296,15 @@ class WCSlider extends HTMLElement {
     this.render()
   }
   attributeChangedCallback(name, oldValue, newValue) {
-    if (oldValue !== newValue) {
+    if (name === 'value') {
       this.render()
+    } else {
+      if (oldValue !== newValue) {
+        this.render()
+      }
     }
   }
+
   rgb(color) {
     const hex = color.replace('#', '')
     return {
@@ -304,43 +313,42 @@ class WCSlider extends HTMLElement {
       b: parseInt(hex.substring(4, 6), 16),
     }
   }
+
   gradient(color1, color2, ratio) {
     const from = this.rgb(color1)
     const to = this.rgb(color2)
     const r = Math.ceil(from.r * ratio + to.r * (1 - ratio))
     const g = Math.ceil(from.g * ratio + to.g * (1 - ratio))
     const b = Math.ceil(from.b * ratio + to.b * (1 - ratio))
-    return '#' + this.hex(r) + this.hex(g) + this.hex(b)
+    return `#${r.toString(16).padStart(2, '0')}${g
+      .toString(16)
+      .padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
   }
-  invertColor(hex, bw) {
+
+  sanitiseHex(hex) {
     if (hex.indexOf('#') === 0) {
       hex = hex.slice(1)
     }
-    // convert 3-digit hex to 6-digits.
     if (hex.length === 3) {
       hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
     }
     if (hex.length !== 6) {
-      throw new Error('Invalid HEX color.')
+      throw new Error('Invalid colour.')
     }
-    let r = parseInt(hex.slice(0, 2), 16),
-      g = parseInt(hex.slice(2, 4), 16),
-      b = parseInt(hex.slice(4, 6), 16)
-    if (bw) {
-      // https://stackoverflow.com/a/3943023/112731
-      return r * 0.299 + g * 0.587 + b * 0.114 > 186 ? '#000000' : '#FFFFFF'
-    }
-    // invert color components
-    r = (255 - r).toString(16)
-    g = (255 - g).toString(16)
-    b = (255 - b).toString(16)
-    // pad each with zeros and return
-    return `#${r.padStart(2, '0')}${g.padStart(2, '0')}${b.padStart(2, '0')}`
+    return `#${hex}`
   }
-  hex(num) {
-    num = num.toString(16)
-    return num.toString().length === 1 ? '0' + num : num
+
+  invertColor(hex, bw) {
+    let { r, g, b } = this.rgb(hex)
+    return bw
+      ? r * 0.299 + g * 0.587 + b * 0.114 > 186
+        ? '#000000'
+        : '#FFFFFF'
+      : `#${(255 - r).toString(16).padStart(2, '0')}${(255 - g)
+          .toString(16)
+          .padStart(2, '0')}${(255 - b).toString(16).padStart(2, '0')}`
   }
+
   get colourRange() {
     return this.#range
       .map((element, index, array) => {
@@ -354,6 +362,7 @@ class WCSlider extends HTMLElement {
       })
       .reverse()
   }
+
   get deselectedRange() {
     return this.#range
       .map((element, index, array) => {
@@ -371,40 +380,85 @@ class WCSlider extends HTMLElement {
       })
       .reverse()
   }
+
   get range() {
     return Array.from(
       { length: this.max + 1 - this.min },
       (_, i) => i + this.min
     )
   }
+
   get width() {
     return Number(this.getAttribute('width')) || 100
   }
+
   get value() {
-    return this.getAttribute('value') ? Number(this.getAttribute('value')) : 4
+    let value = this.getAttribute('value')
+      ? Number(this.getAttribute('value'))
+      : 4
+    if (value < this.constrainMin) {
+      value = this.constrainMin
+    }
+    if (value > this.constrainMax) {
+      value = this.constrainMax
+    }
+    return value
   }
+
   set value(value) {
-    if (value !== this.value) {
-      this.setAttribute('value', value)
+    if (value < this.constrainMin) {
+      this.setAttribute('value', this.constrainMin.toString())
+    } else {
+      if (value > this.constrainMax) {
+        this.setAttribute('value', this.constrainMax.toString())
+      } else {
+        this.setAttribute('value', value.toString())
+      }
     }
   }
+
   get min() {
     return this.getAttribute('min') ? Number(this.getAttribute('min')) : 1
   }
+
   get max() {
     return this.getAttribute('max') ? Number(this.getAttribute('max')) : 7
   }
+
   get from() {
-    return this.getAttribute('from') || '#afd6f3'
+    return this.getAttribute('from')
+      ? this.sanitiseHex(this.getAttribute('from'))
+      : '#afd6f3'
   }
+
   get to() {
-    return this.getAttribute('to') || '#2b91de'
+    return this.getAttribute('to')
+      ? this.sanitiseHex(this.getAttribute('to'))
+      : '#2b91de'
   }
+
   get deselectedFrom() {
-    return this.getAttribute('deselected-from') || '#d0d5d5'
+    return this.getAttribute('deselected-from')
+      ? this.sanitiseHex(this.getAttribute('deselected-from'))
+      : '#d0d5d5'
   }
+
   get deselectedTo() {
-    return this.getAttribute('deselected-to') || '#7f8c8d'
+    return this.getAttribute('deselected-to')
+      ? this.sanitiseHex(this.getAttribute('deselected-to'))
+      : '#7f8c8d'
+  }
+
+  get constrainMin() {
+    return this.getAttribute('constrain-min')
+      ? Number(this.getAttribute('constrain-min'))
+      : this.min
+  }
+
+  get constrainMax() {
+    return this.getAttribute('constrain-max')
+      ? Number(this.getAttribute('constrain-max'))
+      : this.max
   }
 }
 window.customElements.define('wc-slider', WCSlider)
