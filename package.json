@@ -1,6 +1,6 @@
 {
   "name": "@annoyingmouse/wc-slider",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "This web component creates a highly configurable slider element.",
   "main": "wc-slider.js",
   "scripts": {
