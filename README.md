@@ -5,9 +5,7 @@ This web component creates a highly configurable slider element.
 ## Usage
 
 ```html
-<wc-slider id="existing"
-           thickness="0.1">
-</wc-slider>
+<wc-slider></wc-slider>
 <script type="module" src="wc-slider.js"></script>
 ```
 
